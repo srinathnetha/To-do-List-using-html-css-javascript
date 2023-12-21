@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #fff;
+      transition: background-color 0.3s ease;
+    }
+
+    .task.completed {
+      background-color: #e6ffe6;
+    }
+
+    .task input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .delete-btn {
+      background-color: #ff4d4d;
+      color: #fff;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .delete-btn:hover {
+      background-color: #cc0000;
+    }
+
+    .completed-status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>To-Do List</h1>
+  <ul id="taskList"></ul>
+  <input type="text" id="newTask" placeholder="Add a new task">
+  <button onclick="addTask()">Add Task</button>
+  <div id="completedStatus" class="completed-status"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', loadTasks);
+
+    function addTask() {
+      var taskInput = document.getElementById("newTask");
+      var taskList = document.getElementById("taskList");
+
+      if (taskInput.value.trim() === "") {
+        alert("Please enter a task.");
+        return;
+      }
+
+      var newTask = document.createElement("li");
+      newTask.className = "task";
+      
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.addEventListener("change", toggleTaskCompletion);
+
+      var taskText = document.createElement("span");
+      taskText.textContent = taskInput.value;
+
+      var deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "delete-btn";
+      deleteBtn.addEventListener("click", deleteTask);
+
+      newTask.appendChild(checkbox);
+      newTask.appendChild(taskText);
+      newTask.appendChild(deleteBtn);
+
+      taskList.appendChild(newTask);
+
+      // Apply animation class for smooth transition
+      newTask.classList.add('added');
+
+      // Clear the input field after adding the task
+      taskInput.value = "";
+      
+      // Save tasks to local storage
+      saveTasksToLocalStorage();
+      updateCompletedStatus();
+    }
+
+    function toggleTaskCompletion() {
+      var listItem = this.parentNode;
+      listItem.classList.toggle("completed");
+      saveTasksToLocalStorage();
+      updateCompletedStatus();
+    }
+
+    function deleteTask() {
+      var listItem = this.parentNode;
+      var taskList = listItem.parentNode;
+
+      // Apply animation class for smooth transition
+      listItem.classList.add('deleted');
+
+      // Remove the task after the animation completes
+      listItem.addEventListener('transitionend', function () {
+        taskList.removeChild(listItem);
+        saveTasksToLocalStorage();
+        updateCompletedStatus();
+      });
+    }
+
+    function saveTasksToLocalStorage() {
+      var tasks = [];
+      var taskList = document.getElementById("taskList").children;
+
+      for (var i = 0; i < taskList.length; i++) {
+        var task = {
+          text: taskList[i].querySelector("span").textContent,
+          completed: taskList[i].classList.contains("completed")
+        };
+        tasks.push(task);
+      }
+
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      var savedTasks = localStorage.getItem("tasks");
+      if (savedTasks) {
+        var tasks = JSON.parse(savedTasks);
+
+        for (var i = 0; i < tasks.length; i++) {
+          var newTask = document.createElement("li");
+          newTask.className = "task";
+          if (tasks[i].completed) {
+            newTask.classList.add("completed");
+          }
+          
+          var checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = tasks[i].completed;
+          checkbox.addEventListener("change", toggleTaskCompletion);
+
+          var taskText = document.createElement("span");
+          taskText.textContent = tasks[i].text;
+
+          var deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.className = "delete-btn";
+          deleteBtn.addEventListener("click", deleteTask);
+
+          newTask.appendChild(checkbox);
+          newTask.appendChild(taskText);
+          newTask.appendChild(deleteBtn);
+
+          document.getElementById("taskList").appendChild(newTask);
+        }
+
+        updateCompletedStatus();
+      }
+    }
+
+    function updateCompletedStatus() {
+      var completedStatus = document.getElementById("completedStatus");
+      var totalTasks = document.getElementById("taskList").children.length;
+      var completedTasks = document.getElementsByClassName("completed").length;
+
+      completedStatus.textContent = "Completed: " + completedTasks + " out of " + totalTasks;
+    }
+  </script>
+
+</body>
+</html>
